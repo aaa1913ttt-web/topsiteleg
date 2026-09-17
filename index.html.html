@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Віртуальний Бюджет 1000 грн</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            padding: 24px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .budget-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .budget-amount {
+            font-size: 36px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .casino-btn {
+            background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);
+        }
+
+        .casino-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(243, 156, 18, 0.4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            position: relative;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .casino-inputs {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            justify-content: center;
+        }
+
+        .casino-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            flex: 1;
+        }
+
+        .casino-input-group label {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #7f8c8d;
+        }
+
+        .casino-input-group input, .casino-input-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 15px auto;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #2c3e50;
+            z-index: 10;
+        }
+
+        canvas {
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: transform 4s cubic-bezier(0.15, 0.99, 0.35, 1);
+        }
+
+        .spin-btn {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .spin-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .close-modal-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #eef2f5;
+            padding-bottom: 8px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .item-card {
+            border: 1px solid #e1e8ed;
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+            background-color: #fff;
+        }
+
+        .item-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .item-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .item-price {
+            color: #27ae60;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .buy-btn {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .buy-btn:hover {
+            background-color: #219150;
+        }
+
+        .buy-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .purchases-list {
+            list-style: none;
+        }
+
+        .purchase-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #e1e8ed;
+        }
+
+        .empty-history {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .reset-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 16px;
+            font-weight: 600;
+        }
+
+        .reset-btn:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>🎮 Віртуальний Бюджет</h1>
+            <p>У тебе є 1000 грн. На що ти їх витратиш?</p>
+        </header>
+
+        <div class="budget-card">
+            <div>Залишок бюджету:</div>
+            <div class="budget-amount" id="budget">1000 грн</div>
+        </div>
+
+        <div class="actions-bar">
+            <button class="casino-btn" onclick="openCasinoModal()">🎰 Депнути в казік</button>
+        </div>
+
+        <h2 class="section-title">🛍️ Готові варіанти</h2>
+        <div class="items-grid" id="preset-items"></div>
+
+        <h2 class="section-title">📜 Твої покупки та рішення</h2>
+        <ul class="purchases-list" id="history">
+            <li class="empty-history">Ти ще нічого не купив(ла).</li>
+        </ul>
+
+        <button class="reset-btn" onclick="resetBudget()">🔄 Скинути бюджет</button>
+    </div>
+
+    <!-- Модальне вікно Казино -->
+    <div class="modal" id="casino-modal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="closeCasinoModal()">✕</button>
+            <h2>🎰 Колесо Фортуни</h2>
+
+            <div class="casino-inputs">
+                <div class="casino-input-group">
+                    <label for="bet-amount">Ставка (грн):</label>
+                    <input type="number" id="bet-amount" value="100" min="1" oninput="drawWheel()">
+                </div>
+                <div class="casino-input-group">
+                    <label for="multiplier">Множник:</label>
+                    <select id="multiplier" onchange="drawWheel()">
+                        <option value="2">x2</option>
+                        <option value="5">x5</option>
+                        <option value="10">x10</option>
+                        <option value="50">x50</option>
+                        <option value="100">x100</option>
+                        <option value="2500">x2500 (250,000 max)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="wheel-container">
+                <div class="pointer"></div>
+                <canvas id="wheel" width="250" height="250"></canvas>
+            </div>
+
+            <button class="spin-btn" id="spin-btn" onclick="spinWheel()">Крутити!</button>
+            <p id="casino-result" style="margin-top: 15px; font-weight: bold;"></p>
+        </div>
+    </div>
+
+    <script>
+        let initialBudget = 1000;
+        let currentBudget = initialBudget;
+        let history = [];
+        let isSpinning = false;
+        let currentRotation = 0;
+
+        const defaultItems = [
+            { name: "🎬 Квиток у кіно", price: 50 },
+            { name: "☕ Ароматна кава", price: 25 },
+            { name: "🍕 Шматочок піци", price: 45 },
+            { name: "📚 Цікава книжка", price: 200 },
+            { name: "🍦 Морозиво", price: 30 },
+            { name: "🎧 Навушники", price: 350 },
+            { name: "🎮 Гра в Steam", price: 150 },
+            { name: "🍿 Попкорн", price: 60 },
+            { name: "🚕 Поїздка на таксі", price: 90 }
+        ];
+
+        function init() {
+            renderPresetItems();
+            updateUI();
+            drawWheel();
+        }
+
+        function renderPresetItems() {
+            const container = document.getElementById('preset-items');
+            container.innerHTML = '';
+
+            defaultItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="item-title">${item.name}</div>
+                        <div class="item-price">${item.price} грн</div>
+                    </div>
+                    <button class="buy-btn" onclick="buyItem('${item.name}', ${item.price})" 
+                        ${currentBudget < item.price ? 'disabled' : ''}>
+                        Купити
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function buyItem(name, price) {
+            if (currentBudget >= price) {
+                currentBudget -= price;
+                history.push({ name, price: price.toLocaleString('uk-UA') + ' грн', type: 'minus' });
+                updateUI();
+                renderPresetItems();
+            } else {
+                alert("Недостатньо коштів!");
+            }
+        }
+
+        function openCasinoModal() {
+            if (currentBudget <= 0) {
+                alert("У тебе немає коштів для гри в казино!");
+                return;
+            }
+            document.getElementById('casino-modal').style.display = 'flex';
+            document.getElementById('casino-result').innerText = '';
+            drawWheel();
+        }
+
+        function closeCasinoModal() {
+            if (isSpinning) return;
+            document.getElementById('casino-modal').style.display = 'none';
+        }
+
+        function drawWheel() {
+            const canvas = document.getElementById('wheel');
+            const ctx = canvas.getContext('2d');
+            const radius = canvas.width / 2;
+            const mult = document.getElementById('multiplier').value;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Зелений сектор — ВИГРАШ (20% від кола = 72 градуси)
+            const winAngle = (20 / 100) * (Math.PI * 2);
+            ctx.beginPath();
+            ctx.moveTo(radius, radius);
+            ctx.arc(radius, radius, radius, -Math.PI / 2, -Math.PI / 2 + winAngle);
+            ctx.fillStyle = '#2ecc71'; // Зелений
+            ctx.fill();
+
+            // Текст у зеленому секторі
+            ctx.save();
+            ctx.translate(radius, radius);
+            ctx.rotate(-Math.PI / 2 + winAngle / 2);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 14px Segoe UI";
+            ctx.textAlign = "center";
+            ctx.fillText(`x${mult} 🎉`, 70, 5);
+            ctx.restore();
+
+            // 2. Червоний сектор — ПРОГРАШ (80% від кола = 288 градусів)
+            ctx.beginPath();
+            ctx.moveTo(radius, radius);
+            ctx.arc(radius, radius, radius, -Math.PI / 2 + winAngle, -Math.PI / 2 + Math.PI * 2);
+            ctx.fillStyle = '#e74c3c'; // Червоний
+            ctx.fill();
+
+            // Текст у червоному секторі
+            ctx.save();
+            ctx.translate(radius, radius);
+            ctx.rotate(-Math.PI / 2 + winAngle + (Math.PI * 2 - winAngle) / 2);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 18px Segoe UI";
+            ctx.textAlign = "center";
+            ctx.fillText("💥 ПРОГРАШ", 65, 5);
+            ctx.restore();
+        }
+
+        function spinWheel() {
+            if (isSpinning) return;
+
+            const bet = parseFloat(document.getElementById('bet-amount').value);
+            const mult = parseFloat(document.getElementById('multiplier').value);
+
+            if (isNaN(bet) || bet <= 0) {
+                alert("Введи коректну ставку!");
+                return;
+            }
+
+            if (currentBudget < bet) {
+                alert("Недостатньо коштів на балансі для цієї ставки!");
+                return;
+            }
+
+            currentBudget -= bet;
+            updateUI();
+            renderPresetItems();
+
+            isSpinning = true;
+            document.getElementById('spin-btn').disabled = true;
+            document.getElementById('casino-result').innerText = 'Колесо крутиться...';
+
+            const canvas = document.getElementById('wheel');
+            
+            // Точний 20% шанс виграти
+            const isWin = Math.random() < 0.20;
+
+            const extraRotations = 1800; // 5 повних обертів (360 * 5)
+            let stopOffset;
+
+            if (isWin) {
+                // Влучність у Зелений виграшний сектор (від 5 до 67 градусів від верху)
+                stopOffset = 360 - (Math.floor(Math.random() * 62) + 5);
+            } else {
+                // Влучність у Червоний програшний сектор (від 77 до 350 градусів від верху)
+                stopOffset = 360 - (Math.floor(Math.random() * 273) + 77);
+            }
+            
+            currentRotation += extraRotations + (360 - (currentRotation % 360)) + stopOffset;
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                document.getElementById('spin-btn').disabled = false;
+
+                if (isWin) {
+                    let winAmount = bet * mult;
+                    if (winAmount > 250000) winAmount = 250000;
+
+                    currentBudget += winAmount;
+                    document.getElementById('casino-result').innerText = `🎉 Виграш! +${winAmount.toLocaleString('uk-UA')} грн!`;
+                    history.push({ name: `🎰 Казино (x${mult})`, price: `+${winAmount.toLocaleString('uk-UA')} грн`, type: 'plus' });
+                } else {
+                    document.getElementById('casino-result').innerText = `💥 Програш ${bet.toLocaleString('uk-UA')} грн.`;
+                    history.push({ name: `🎰 Казино (x${mult})`, price: `-${bet.toLocaleString('uk-UA')} грн`, type: 'minus' });
+                }
+
+                updateUI();
+                renderPresetItems();
+            }, 4000);
+        }
+
+        function updateUI() {
+            document.getElementById('budget').innerText = `${currentBudget.toLocaleString('uk-UA')} грн`;
+
+            const historyContainer = document.getElementById('history');
+            if (history.length === 0) {
+                historyContainer.innerHTML = '<li class="empty-history">Ти ще нічого не купив(ла).</li>';
+            } else {
+                historyContainer.innerHTML = history.map(item => `
+                    <li class="purchase-item">
+                        <span>${item.name}</span>
+                        <strong style="color: ${item.type === 'plus' ? '#27ae60' : '#e74c3c'}">
+                            ${item.type === 'plus' ? item.price : '-' + item.price}
+                        </strong>
+                    </li>
+                `).join('');
+            }
+        }
+
+        function resetBudget() {
+            if (isSpinning) return;
+            currentBudget = initialBudget;
+            history = [];
+            updateUI();
+            renderPresetItems();
+        }
+
+        init();
+    </script>
+</body>
+</html>
